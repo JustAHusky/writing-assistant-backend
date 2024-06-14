@@ -1,7 +1,7 @@
 const { exec } = require('child_process');
 const express = require("express");
 const bodyParser = require("body-parser");
-const connection = require("./database");
+const pool = require("./database");
 const cors = require("cors");
 const Together = require('together-ai');
 require('dotenv').config();
@@ -38,79 +38,69 @@ app.post("/api/generate-answer", async function (req, res) {
   }
 });
 
-app.post("/api/user", function (req, res) {
+app.post("/api/user", async function (req, res) {
   const { name, email } = req.body;
 
-  const checkSql = 'SELECT COUNT(*) AS count FROM USER_INFO WHERE name = ? AND email = ?';
-  connection.query(checkSql, [name, email], (checkErr, checkResult) => {
-    if (checkErr) {
-      console.error('Error checking user information:', checkErr);
-      res.status(500).json({ error: 'Failed to check user information' });
-      return;
-    }
+  try {
+    const checkSql = 'SELECT COUNT(*) AS count FROM user_info WHERE name = $1 AND email = $2';
+    const checkResult = await pool.query(checkSql, [name, email]);
 
-    const { count } = checkResult[0];
+    const { count } = checkResult.rows[0];
     if (count > 0) {
       console.log('User information already exists in the database');
       res.status(200).json({ message: 'User information already exists in the database' });
       return;
     }
 
-    const insertSql = 'INSERT INTO USER_INFO (name, email) VALUES (?, ?)';
-    connection.query(insertSql, [name, email], (insertErr, insertResult) => {
-      if (insertErr) {
-        console.error('Error inserting user information:', insertErr);
-        res.status(500).json({ error: 'Failed to save user information' });
-        return;
-      }
-      console.log('User information saved successfully');
-      res.status(200).json({ message: 'User information saved successfully' });
-    });
-  });
+    const insertSql = 'INSERT INTO user_info (name, email) VALUES ($1, $2)';
+    await pool.query(insertSql, [name, email]);
+    console.log('User information saved successfully');
+    res.status(200).json({ message: 'User information saved successfully' });
+  } catch (err) {
+    console.error('Error inserting user information:', err);
+    res.status(500).json({ error: 'Failed to save user information' });
+  }
 });
 
-app.post("/api/activity", function (req, res) {
+app.post("/api/activity", async function (req, res) {
   const { question, answer, user, activityType } = req.body;
 
-  const sql = 'INSERT INTO ACTIVITY_HISTORY (user, activity_type, input_text, output_text) VALUES (?, ?, ?, ?)';
-  connection.query(sql, [user, activityType, question, answer], (err, result) => {
-    if (err) {
-      console.error('Error inserting activity history:', err);
-      res.status(500).json({ error: 'Failed to save activity history' });
-      return;
-    }
+  try {
+    const sql = 'INSERT INTO activity_history (user, activity_type, input_text, output_text) VALUES ($1, $2, $3, $4)';
+    await pool.query(sql, [user, activityType, question, answer]);
     console.log('Activity history saved successfully');
     res.status(200).json({ message: 'Activity history saved successfully' });
-  });
+  } catch (err) {
+    console.error('Error inserting activity history:', err);
+    res.status(500).json({ error: 'Failed to save activity history' });
+  }
 });
 
-app.get("/api/activity/:name", function (req, res) {
+app.get("/api/activity/:name", async function (req, res) {
   const { name } = req.params;
 
-  const sql = 'SELECT * FROM ACTIVITY_HISTORY WHERE user = ?';
-  connection.query(sql, [name], (err, results) => {
-    if (err) {
-      console.error('Error fetching activity history:', err);
-      res.status(500).json({ error: 'Failed to fetch activity history' });
-      return;
-    }
-    res.status(200).json(results);
-  });
+  try {
+    const sql = 'SELECT * FROM activity_history WHERE user = $1';
+    const results = await pool.query(sql, [name]);
+    res.status(200).json(results.rows);
+  } catch (err) {
+    console.error('Error fetching activity history:', err);
+    res.status(500).json({ error: 'Failed to fetch activity history' });
+  }
 });
 
-app.delete("/api/activity/:name", function (req, res) {
+app.delete("/api/activity/:name", async function (req, res) {
   const { name } = req.params;
 
-  const sql = 'DELETE FROM ACTIVITY_HISTORY WHERE user = ?';
-  connection.query(sql, [name], (err, result) => {
-    if (err) {
-      console.error('Error deleting activity history:', err);
-      res.status(500).json({ error: 'Failed to delete activity history' });
-      return;
-    }
+  try {
+    const sql = 'DELETE FROM activity_history WHERE user = $1';
+    await pool.query(sql, [name]);
     console.log('Activity history deleted successfully');
     res.status(200).json({ message: 'Activity history deleted successfully' });
-  });
+  } catch (err) {
+    console.error('Error deleting activity history:', err);
+    res.status(500).json({ error: 'Failed to delete activity history' });
+  }
 });
 
 const killPort = (port) => {
