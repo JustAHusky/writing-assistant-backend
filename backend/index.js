@@ -66,7 +66,7 @@ app.post("/api/activity", async function (req, res) {
   const { question, answer, user, activityType } = req.body;
 
   try {
-    const sql = 'INSERT INTO activity_history (user, activity_type, input_text, output_text) VALUES ($1, $2, $3, $4)';
+    const sql = 'INSERT INTO activity_history ("user", activity_type, input_text, output_text) VALUES ($1, $2, $3, $4)';
     await pool.query(sql, [user, activityType, question, answer]);
     console.log('Activity history saved successfully');
     res.status(200).json({ message: 'Activity history saved successfully' });
@@ -80,7 +80,7 @@ app.get("/api/activity/:name", async function (req, res) {
   const { name } = req.params;
 
   try {
-    const sql = 'SELECT * FROM activity_history WHERE user = $1';
+    const sql = 'SELECT * FROM activity_history WHERE "user" = $1';
     const results = await pool.query(sql, [name]);
     res.status(200).json(results.rows);
   } catch (err) {
@@ -93,7 +93,7 @@ app.delete("/api/activity/:name", async function (req, res) {
   const { name } = req.params;
 
   try {
-    const sql = 'DELETE FROM activity_history WHERE user = $1';
+    const sql = 'DELETE FROM activity_history WHERE "user" = $1';
     await pool.query(sql, [name]);
     console.log('Activity history deleted successfully');
     res.status(200).json({ message: 'Activity history deleted successfully' });
