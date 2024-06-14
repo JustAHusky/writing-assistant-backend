@@ -1,7 +1,5 @@
 const { exec } = require('child_process');
 const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
 const Together = require('together-ai');
 const connection = require("./database");
 require('dotenv').config();
@@ -10,19 +8,8 @@ const PORT = process.env.PORT || 3080;
 
 const app = express();
 
-const allowedOrigins = ['https://writing-assistant-frontend.vercel.app'];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-}));
-
-app.use(bodyParser.json());
+// Removed CORS middleware
+// Removed Body Parsing Middleware
 
 app.get("/", (req, res) => {
   res.send("Server is running");
@@ -42,9 +29,10 @@ app.post("/api/generate-answer", async function (req, res) {
     });
 
     const generatedAnswer = response.choices[0].message.content;
+    console.log('Generated answer:', generatedAnswer);
     res.status(200).json({ answer: generatedAnswer });
   } catch (error) {
-    console.error('Error generating answer:', error.message);
+    console.error('Error generating answer:', error.message, error.stack);
     res.status(500).json({ error: 'Failed to generate answer', details: error.message });
   }
 });
