@@ -20,7 +20,7 @@ const together = new Together({
 });
 
 app.post("/api/generate-answer", async function (req, res) {
-  const { question } = req.body;
+  const { question } = "hello world";
 
   try {
     const response = await together.chat.completions.create({
