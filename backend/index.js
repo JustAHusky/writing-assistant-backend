@@ -1,15 +1,17 @@
 const { exec } = require('child_process');
 const express = require("express");
-const Together = require('together-ai');
+const bodyParser = require("body-parser");
 const connection = require("./database");
+const cors = require("cors");
+const Together = require('together-ai');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3080;
 
 const app = express();
 
-// Removed CORS middleware
-// Removed Body Parsing Middleware
+app.use(cors());
+app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
   res.send("Server is running");
@@ -20,7 +22,7 @@ const together = new Together({
 });
 
 app.post("/api/generate-answer", async function (req, res) {
-  const { question } = "hello world";
+  const { question } = req.body;
 
   try {
     const response = await together.chat.completions.create({
@@ -29,11 +31,10 @@ app.post("/api/generate-answer", async function (req, res) {
     });
 
     const generatedAnswer = response.choices[0].message.content;
-    console.log('Generated answer:', generatedAnswer);
     res.status(200).json({ answer: generatedAnswer });
   } catch (error) {
-    console.error('Error generating answer:', error.message, error.stack);
-    res.status(500).json({ error: 'Failed to generate answer', details: error.message });
+    console.error('Error generating answer:', error);
+    res.status(500).json({ error: 'Failed to generate answer' });
   }
 });
 
@@ -43,8 +44,8 @@ app.post("/api/user", function (req, res) {
   const checkSql = 'SELECT COUNT(*) AS count FROM USER_INFO WHERE name = ? AND email = ?';
   connection.query(checkSql, [name, email], (checkErr, checkResult) => {
     if (checkErr) {
-      console.error('Error checking user information:', checkErr.message);
-      res.status(500).json({ error: 'Failed to check user information', details: checkErr.message });
+      console.error('Error checking user information:', checkErr);
+      res.status(500).json({ error: 'Failed to check user information' });
       return;
     }
 
@@ -58,8 +59,8 @@ app.post("/api/user", function (req, res) {
     const insertSql = 'INSERT INTO USER_INFO (name, email) VALUES (?, ?)';
     connection.query(insertSql, [name, email], (insertErr, insertResult) => {
       if (insertErr) {
-        console.error('Error inserting user information:', insertErr.message);
-        res.status(500).json({ error: 'Failed to save user information', details: insertErr.message });
+        console.error('Error inserting user information:', insertErr);
+        res.status(500).json({ error: 'Failed to save user information' });
         return;
       }
       console.log('User information saved successfully');
@@ -74,8 +75,8 @@ app.post("/api/activity", function (req, res) {
   const sql = 'INSERT INTO ACTIVITY_HISTORY (user, activity_type, input_text, output_text) VALUES (?, ?, ?, ?)';
   connection.query(sql, [user, activityType, question, answer], (err, result) => {
     if (err) {
-      console.error('Error inserting activity history:', err.message);
-      res.status(500).json({ error: 'Failed to save activity history', details: err.message });
+      console.error('Error inserting activity history:', err);
+      res.status(500).json({ error: 'Failed to save activity history' });
       return;
     }
     console.log('Activity history saved successfully');
@@ -89,8 +90,8 @@ app.get("/api/activity/:name", function (req, res) {
   const sql = 'SELECT * FROM ACTIVITY_HISTORY WHERE user = ?';
   connection.query(sql, [name], (err, results) => {
     if (err) {
-      console.error('Error fetching activity history:', err.message);
-      res.status(500).json({ error: 'Failed to fetch activity history', details: err.message });
+      console.error('Error fetching activity history:', err);
+      res.status(500).json({ error: 'Failed to fetch activity history' });
       return;
     }
     res.status(200).json(results);
@@ -103,8 +104,8 @@ app.delete("/api/activity/:name", function (req, res) {
   const sql = 'DELETE FROM ACTIVITY_HISTORY WHERE user = ?';
   connection.query(sql, [name], (err, result) => {
     if (err) {
-      console.error('Error deleting activity history:', err.message);
-      res.status(500).json({ error: 'Failed to delete activity history', details: err.message });
+      console.error('Error deleting activity history:', err);
+      res.status(500).json({ error: 'Failed to delete activity history' });
       return;
     }
     console.log('Activity history deleted successfully');
