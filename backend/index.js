@@ -9,6 +9,10 @@ require('dotenv').config();
 
 const PORT = process.env.PORT || 3080;
 
+app.use("/", (req, res) =>{
+  res.send("Server is running");
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 const together = new Together({
