@@ -3,22 +3,26 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const connection = require("./database");
 const cors = require("cors");
-const app = express();
 const Together = require('together-ai');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3080;
 
-app.use("/", (req, res) =>{
-  res.send("Server is running");
-});
+const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// Root route
+app.get("/", (req, res) => {
+  res.send("Server is running");
+});
+
 const together = new Together({
   apiKey: process.env.TOGETHER_API_KEY,
 });
 
+// Generate answer route
 app.post("/api/generate-answer", async function (req, res) {
   const { question } = req.body;
 
@@ -36,6 +40,7 @@ app.post("/api/generate-answer", async function (req, res) {
   }
 });
 
+// User route
 app.post("/api/user", function (req, res) {
   const { name, email } = req.body;
 
@@ -67,6 +72,7 @@ app.post("/api/user", function (req, res) {
   });
 });
 
+// Activity route
 app.post("/api/activity", function (req, res) {
   const { question, answer, user, activityType } = req.body;
 
@@ -82,6 +88,7 @@ app.post("/api/activity", function (req, res) {
   });
 });
 
+// Get activity by user route
 app.get("/api/activity/:name", function (req, res) {
   const { name } = req.params;
 
@@ -96,6 +103,7 @@ app.get("/api/activity/:name", function (req, res) {
   });
 });
 
+// Delete activity by user route
 app.delete("/api/activity/:name", function (req, res) {
   const { name } = req.params;
 
@@ -111,6 +119,7 @@ app.delete("/api/activity/:name", function (req, res) {
   });
 });
 
+// Kill port and start server
 const killPort = (port) => {
   return new Promise((resolve, reject) => {
     exec(`npx kill-port ${port}`, (err, stdout, stderr) => {
@@ -134,3 +143,5 @@ killPort(3080)
   .catch((err) => {
     console.error('Failed to kill process on port 3080', err);
   });
+
+module.exports = app;
