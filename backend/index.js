@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
-const allowedOrigins = ['https://writing-assistant-frontend-navy.vercel.app'];
+const allowedOrigins = ['https://writing-assistant-frontend.vercel.app'];
 
 // Configure CORS
 app.use(cors({
