@@ -13,16 +13,27 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Root route
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
+
+const allowedOrigins = ['https://writing-assistant-frontend-navy.vercel.app'];
+
+// Configure CORS
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 
 const together = new Together({
   apiKey: process.env.TOGETHER_API_KEY,
 });
 
-// Generate answer route
 app.post("/api/generate-answer", async function (req, res) {
   const { question } = req.body;
 
@@ -40,7 +51,6 @@ app.post("/api/generate-answer", async function (req, res) {
   }
 });
 
-// User route
 app.post("/api/user", function (req, res) {
   const { name, email } = req.body;
 
@@ -72,7 +82,6 @@ app.post("/api/user", function (req, res) {
   });
 });
 
-// Activity route
 app.post("/api/activity", function (req, res) {
   const { question, answer, user, activityType } = req.body;
 
@@ -88,7 +97,6 @@ app.post("/api/activity", function (req, res) {
   });
 });
 
-// Get activity by user route
 app.get("/api/activity/:name", function (req, res) {
   const { name } = req.params;
 
@@ -103,7 +111,6 @@ app.get("/api/activity/:name", function (req, res) {
   });
 });
 
-// Delete activity by user route
 app.delete("/api/activity/:name", function (req, res) {
   const { name } = req.params;
 
@@ -119,7 +126,6 @@ app.delete("/api/activity/:name", function (req, res) {
   });
 });
 
-// Kill port and start server
 const killPort = (port) => {
   return new Promise((resolve, reject) => {
     exec(`npx kill-port ${port}`, (err, stdout, stderr) => {
