@@ -138,7 +138,7 @@ function GrammarChecker({ user }) {
     }
 
     try {
-      await axios.post('https://writing-assistant-backend.vercel.app/api/activity', {
+      await axios.post('http://localhost:3080/api/activity', {
         user: user.name,
         activityType: "Grammar Checking",
         question: question,

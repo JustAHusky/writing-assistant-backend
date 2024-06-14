@@ -115,7 +115,7 @@ function PlagiarismChecker({ user }) {
 
   async function generateAnswer() {
     try {
-      const response = await axios.post('https://writing-assistant-backend.vercel.app/api/generate-answer', { question });
+      const response = await axios.post('http://localhost:3080/api/generate-answer', { question });
       const { answer } = response.data;
       setAnswer(convertToLinks(answer));
       saveActivityToDatabase(question, answer);

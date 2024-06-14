@@ -45,7 +45,7 @@ function App({ user, updateUser }) {
 
   const saveUserToDatabase = async (userObject) => {
     try {
-      await axios.post('https://writing-assistant-backend.vercel.app/api/user', userObject);
+      await axios.post('http://localhost:3080/api/user', userObject);
     } catch (error) {
     }
   };
